@@ -99,6 +99,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (strlen($address) > 255) {
             $mistakes[] = 'address mag niet langer zijn dan 255 characters';
         }
+        if (!preg_match("/^[\p{L}\p{N}\s]+$/u", $address ?? '')) {
+            $mistakes[] = 'Het adres mag geen speciale tekens bevatten.';
+        }
+
+        if (!preg_match('/\d/', $address)) {
+            $mistakes[] = 'Het adres moet minstens 1 cijfer bevatten.';
+        }
+
+
+
 
         //gebruikersnaam sanitisation
         if (empty($username)) {
@@ -107,6 +117,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (strlen($username) > 255) {
             $mistakes[] = 'Gebruikersnaam mag niet langer zijn dan 255 characters';
         }
+
+        if (!preg_match("/^[\p{L}\p{N}_]+$/u", $username)) {
+            $mistakes[] = "Gebruikersnaam mag alleen letters, cijfers en underscores bevatten.";
+        }
+
 
 
         //wachtwoord sanitisation
