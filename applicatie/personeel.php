@@ -10,7 +10,6 @@ if($_SESSION['role'] != 'Personnel')
     exit;
 }
 
-var_dump($_POST);
 ?>
 
 <!DOCTYPE html>
