@@ -1,12 +1,8 @@
-<?php    if(isset($_POST['bestel'])){
-        $order_id = (int)$_POST['bestel'];
-        $query->execute([':order_id' => $order_id]);
-        $data = $query -> fetch();
-   
-    } 
-
+<?php
 require_once 'db_connectie.php';
 require_once 'header.php';
+$db = maakVerbinding();
+$mistakes = [];
 ?>
 
 <!DOCTYPE html>
@@ -19,81 +15,73 @@ require_once 'header.php';
     <link rel="stylesheet" href="normalize.css">
     <link rel="stylesheet" href="styling.css">
 </head>
-
 <body>
-    
-    <header>
-        <ul id="NavigatieBalk">
-            <li >
-                <a href="profiel.php">Profiel</a>
-            </li>
-            <li >
-                <a href="bestelling.php">Bestelling</a>
-            </li>
-        
-        <li >
-            <a href="privacy.php">Privacy</a>
-        </li>
-            <li >
-                <a id="Menu" href="index.php">Menu</a>
-    
-            <li >
-                <a href="winkelwagentje.php">Winkelwagentje</a>
-            </li>
-            <li >
-                <a href="Login.php">Log in</a>
-            </li>
-            <li >
-                <a href="personeel.php">Personeel</a>
-            </li>
-        </ul>
-    
-        <img id="logo" src="fotos/logo.png" alt="foto van een pizza met text: pizzaria het blok">
-    
-    
-    
-    </header>
-    <?php
-        $verbinding = maakVerbinding();
-        $sql = "select status from pizza_order where order_id = :order_id";
-        $query = $verbinding->prepare($sql);
+    <div id="bestelContent">
+<?php
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $orderNumber = htmlspecialchars($_POST['bestel']);
 
-    
-
-    $check_bestelling = "<p>";
-
-    $check_bestelling .=
-       "<form id='line' method='post' action='bestelling.php'>
-            <input type='number' name='bestel'>
-            <input type='submit' value='Check bestelling'>
-        </form>";
-
-    $check_bestelling .="</p>";
-    
-    
-
-
-    $status = "<p id='line2'>";
-
-    if ($data[0] == 1) {
-        $status .= 'Je bestelling zit in de oven';
-    } elseif ($data[0] == 2) {
-        $status .= 'Je bestelling wordt bezorgd';
-    } elseif ($data[0] == 3) {
-        $status .= 'Je bestelling is bezorgd';
-    } else {
-        $status .= 'Bestelnummer bestaat niet';
+    //orderNumber sanitisation
+    if (empty($orderNumber)) {
+        $mistakes[] = 'Vul een nummer in';
     }
-    
 
-    $status .= '</p>';
+    if (!is_numeric($orderNumber)) {
+        $mistakes[] = 'Vul een geldige waarde in';
+    }
 
-    print($status);
-    print($check_bestelling);
+    if (count($mistakes) > 0) {
+        echo '<p id="mistakes">';
+        foreach ($mistakes as $mistake) {
+            echo $mistake;
+            echo '<br>';
+        }
+        echo '</p>';
+    }
+    else
+    {
+        $orderSql = '
+                    SELECT pizza_order_product.product_name, pizza_order_product.quantity, pizza_order.status FROM pizza_order_product
+                    JOIN pizza_order 
+                    ON pizza_order.order_id = pizza_order_product.order_id
+                    WHERE pizza_order_product.order_id = :orderId;';
+        $orderQuery = $db->prepare($orderSql);
+        $orderQuery->execute([':orderId' => $orderNumber]);
+        $order = $orderQuery->fetchAll();
+
+        echo"<div id='orderList'>";
+        foreach($order as $product)
+        {
+            if($product[2] == 1)
+            {
+                $status = 'Bestelling word bereid';
+            }
+            if($product[2] == 2)
+            {
+                $status = 'Bestelling is onderweg';
+            }
+            if($product[2] == 3)
+            {
+                $status = 'Bestelling is bezorgd';
+            }
+            echo "Product: $product[0]: ";
+            echo "$product[1]<br>";
+            echo "Status: $status <br>";
+        }
+        echo"</div>";
+
+    }
+}
+?>
 
 
-    ?>
-
+    <p>
+    <form id='line' method='post' action='bestelling.php'>
+        <input type='number' name='bestel'>
+        <input type='submit' value='Check bestelling'>
+    </form>
+    </p>
+</div>
 </body>
 
 </html>

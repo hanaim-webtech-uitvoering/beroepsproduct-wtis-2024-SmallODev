@@ -67,7 +67,7 @@ $db = maakVerbinding();
        exit;
    }
    
-   $winkelwagen = '<table id="winkelwagen">';
+   $winkelwagen = '<table id="winkelwagenList">';
    foreach ($_SESSION['winkelmand'] as $product => $aantal) {
        $winkelwagen .= "
        <tr>
@@ -85,8 +85,6 @@ $db = maakVerbinding();
            </td>
        </tr><tr><td>";
    }
-
-   $winkelwagen .= var_dump($_SESSION);
    $winkelwagen .= "</td></tr>";
    
    $winkelwagen .= "
