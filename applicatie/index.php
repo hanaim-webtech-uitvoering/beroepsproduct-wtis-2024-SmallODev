@@ -1,8 +1,8 @@
 <?php 
-
+session_start();
 require_once 'db_connectie.php';
-
-
+require_once 'header.php';
+$menuknop =0;
 ?>
 
 <!DOCTYPE html>
@@ -18,43 +18,8 @@ require_once 'db_connectie.php';
 
 
 <body>
-
-    <header>
-        <ul id="NavigatieBalk">
-            <li >
-                <a href="profiel.php">Profiel</a>
-            </li>
-            <li >
-                <a href="bestelling.php">Bestelling</a>
-            </li>
-        
-        <li >
-            <a href="privacy.php">Privacy</a>
-        </li>
-            <li >
-                <a id="Menu" href="index.php">Menu</a>
-            </li>
-    
-            <li >
-                <a href="winkelwagentje.php">Winkelwagentje</a>
-            </li>
-            <li >
-                <a href="Login.php">Log in</a>
-            </li>
-            <li >
-                <a href="personeel.php">Personeel</a>
-            </li>
-        </ul>
-    
-        <img id="logo" src="fotos/logo.png" alt="foto van een pizza met text: pizzaria het blok">
-    
-    
-    
-    </header>
     
     <?php
-
-
     
         $winkelwagen = array();
 
@@ -100,6 +65,7 @@ require_once 'db_connectie.php';
 
         var_dump($_GET);
         var_dump($menukaart);
+
 
         ?>
 

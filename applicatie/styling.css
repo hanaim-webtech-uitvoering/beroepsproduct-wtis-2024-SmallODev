@@ -11,6 +11,7 @@ header {
 }
 body {
     background-color: rgb(200, 207, 190);
+    flex: auto;
 }
 
 ul{
@@ -27,6 +28,7 @@ ul{
 #menukaart{
     font-size: 2vw;
     position: absolute;
+    top: 20vw;
     bottom: 9vw;
     left: 10vw;
 }
@@ -388,15 +390,56 @@ a:visited{
 
 #winkelwagen{
 
-    position:absolute;
-    top: 20vw;
     font-size: 3vw;
 }
 
+
+#loginInput
+{
+    position:absolute;
+    top: 20vw;
+}
 
 #login{
 
     position: absolute;
     top: 20vw;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 
+}
+
+#register{
+
+    position: absolute;
+    top: 35vw;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+}
+
+#foutww
+{
+    position: absolute;
+    top: 300px;
+}
+
+#bestelling
+{
+    display: flex;
+    flex-direction: column;
+    position:absolute;
+    top: 20vw;
+    font-size: 2vw;
+}
+
+#mistakes
+{
+    position: absolute;
+    top: 40vh;
+    left: 13vw;
+    display: flex;
+    flex-direction: column;
 }

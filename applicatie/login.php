@@ -1,8 +1,3 @@
-<?php 
-
-require_once 'db_connectie.php';
-?>
-
 <!DOCTYPE html>
 <html lang="nl">
 
@@ -13,134 +8,201 @@ require_once 'db_connectie.php';
     <link rel="stylesheet" href="normalize.css">
     <link rel="stylesheet" href="styling.css">
 </head>
-
-
-<header>
-        <ul id="NavigatieBalk">
-            <li >
-                <a href="profiel.php">Profiel</a>
-            </li>
-            <li >
-                <a href="bestelling.php">Bestelling</a>
-            </li>
-        
-        <li >
-            <a href="privacy.php">Privacy</a>
-        </li>
-            <li >
-                <a id="Menu" href="index.php">Menu</a>
-    
-            <li >
-                <a href="winkelwagentje.php">Winkelwagentje</a>
-            </li>
-            <li >
-                <a href="Login.php">Log in</a>
-            </li>
-            <li >
-                <a href="personeel.php">Personeel</a>
-            </li>
-        </ul>
-    
-        <img id="logo" src="fotos/logo.png" alt="foto van een pizza met text: pizzaria het blok">
-    
-    
-    
-    </header>
-
-
-<body>
-<?php 
-
-require_once 'db_connectie.php';
+<?php
+$wwfout = false;
+$mistakesMade;
+$_SESSION['ingelogged'] = false;
 session_start();
-
+require_once 'db_connectie.php';
 $db = maakVerbinding();
+require_once 'header.php';
 
-if (isset($_POST['username'], $_POST['password'])) {
-    $username = ($_POST['username']);
-    $password = ($_POST['password']);
+$mistakes = [];
 
-    if (isset($_POST['action']) && $_POST['action'] === 'login') {
-        $sql = "SELECT password, role FROM [user] WHERE username = :username";
-        $query = $db->prepare($sql);
-        $query->execute([':username' => $username]);
-        $user = $query->fetch();
+if (isset($_SESSION['ingelogged'])) {
+    if ($_SESSION['ingelogged'] == true) {
+        header('location: index.php');
+    }
+}
 
-        if ($user && password_verify($password, $user['password'])) {
-            $_SESSION['login'] = [
-                'logged_in' => true, 'username' => $username,'role' => $user['role']
-            ];
-            print "<p>Ingelogd als {$username}</p>";
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['username'])) {
+        $username = $_POST['username'];
+        $password = $_POST['password'];
+
+        $username = htmlspecialchars($username);
+        $password = htmlspecialchars($password);
+
+        $loginSql = 'SELECT username, password, role, first_name, address FROM [User] WHERE username = :username';
+        $loginQuery = $db->prepare($loginSql);
+        $loginQuery->execute([':username' => $username]);
+        $user = $loginQuery->fetch();
+
+        echo '<br>';
+        var_dump($user);
+        echo '<br>';
+        if ($user == false) {
+            echo '<div id="mistakes">Wachtwoord of Gebruikersnaam klopt niet</div>';
+            $_SESSION['ingelogged'] = false;
         } else {
-            print "<p>Onjuiste gebruikersnaam of wachtwoord</p>";
-        }
-    } elseif (isset($_POST['action']) && $_POST['action'] === 'register') {
-        if (isset($_POST['naam'], $_POST['achternaam'], $_POST['adres'])) {
-            $naam = trim($_POST['naam']);
-            $achternaam = trim($_POST['achternaam']);
-            $adres = trim($_POST['adres']);
-
-            $sql = "SELECT COUNT(*) 
-            FROM [user] 
-            WHERE username = :username";
-            $query = $db->prepare($sql);
-            $query->execute([':username' => $username]);
-            $count = $query->fetchColumn();
-
-            if ($count == 0) {
-                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
-                $sql = "INSERT INTO [user] (username, password, first_name, last_name, address, role) 
-                        VALUES (:username, :password, :naam, :achternaam, :adres, 'Client')";
-                $query = $db->prepare($sql);
-                $query->execute([
-                    ':username' => $username,':password' => $hashedPassword,':naam' => $naam,':achternaam' => $achternaam,':adres' => $adres
-                ]);
-
-                $_SESSION['login'] = [
-                    'logged_in' => true,'username' => $username, 'role' => 'Client'
-                ];
-                print "<p>Registratie succesvol! U bent nu ingelogd als {$username}.</p>";
+            if (password_verify($password, $user['password'])) {
+                $_SESSION['ingelogged'] = true;
+                $_SESSION['username'] = $username;
+                $_SESSION['role'] = $user['role'];
+                $_SESSION['name'] = $user['first_name'];
+                $_SESSION['address'] = $user['address'];
             } else {
-                print "<p>Gebruikersnaam bestaat al. Kies een andere.</p>";
+                $_SESSION['ingelogged'] = false;
+                $wwfout = true;
             }
+        }
+
+        if (strlen($username) > 255) {
+            $mistakes[] = 'Gebruikersnaam mag niet langer zijn dan 255 characters';
+        }
+    }
+
+    if (isset($_POST['name'])) {
+        $name = htmlspecialchars($_POST['name']);
+        $lastname = htmlspecialchars($_POST['lastname']);
+        $address = htmlspecialchars($_POST['address']);
+        $username = htmlspecialchars($_POST['usernameRegister']);
+        $password1 = htmlspecialchars($_POST['password1']);
+        $password2 = htmlspecialchars($_POST['password2']);
+
+
+        //naam sanitisation
+        if (empty($name)) {
+            $mistakes[] = 'Naam is verplicht';
+        }
+        if (strlen($name) > 255) {
+            $mistakes[] = 'Naam mag niet langer zijn dan 255 characters';
+        }
+        if (!preg_match("/^[\p{L}\s'-]+$/u", $name)) {
+            $mistakes[] = 'Uw naam mag alleen letters bevatten';
+        }
+
+        //achternaam sanitisation
+        if (empty($lastname)) {
+            $mistakes[] = 'Achternaam is verplicht';
+        }
+        if (strlen($lastname) > 255) {
+            $mistakes[] = 'Achternaam mag niet langer zijn dan 255 characters';
+        }
+        if (!preg_match("/^[\p{L}\s'-]+$/u", $lastname)) {
+            $mistakes[] = 'Uw achternaam mag alleen letters bevatten';
+        }
+
+        //adres sanitisation
+        if (empty($address)) {
+            $mistakes[] = 'Adres is verplicht';
+        }
+        if (strlen($address) > 255) {
+            $mistakes[] = 'address mag niet langer zijn dan 255 characters';
+        }
+
+        //gebruikersnaam sanitisation
+        if (empty($username)) {
+            $mistakes[] = 'Gebruikersnaam is verplicht';
+        }
+        if (strlen($username) > 255) {
+            $mistakes[] = 'Gebruikersnaam mag niet langer zijn dan 255 characters';
+        }
+
+
+        //wachtwoord sanitisation
+        if (empty($password1)) {
+            $mistakes[] = 'Wachtwoord is verplicht';
+        }
+        if (empty($password2)) {
+            $mistakes[] = 'Wachtwoord moet herhaald worden';
+        }
+        if (strlen($password1) > 255) {
+            $mistakes[] = 'Wachtwoord mag niet langer zijn dan 255 characters';
+        }
+
+        if ($password1 != $password2) {
+            $mistakes[] = 'Wachtwoorden moeten overeen komen';
+        }
+
+        if (count($mistakes) > 0) {
+            $mistakesMade = true;
         } else {
-            print "<p>Alle velden zijn verplicht voor registratie.</p>";
+            $usernameCheckSql = "select count(username) from [User] where username = :username";
+            $usernameCheckQuery = $db->prepare($usernameCheckSql);
+            $usernameCheckQuery->execute([':username' => $username]);
+            $usernameCount = $usernameCheckQuery->fetch();
+            print_r($usernameCount);
+            if ($usernameCount[0] == 0) {
+
+                $hashedPassword = password_hash($password1, PASSWORD_DEFAULT);
+
+                $registerSql = "INSERT INTO [User] (username, password, first_name, last_name, address, role)
+                            VALUES(:username, :password, :firstname, :lastname, :address, :role)";
+                $registerQuery = $db->prepare($registerSql);
+                $registerQuery->execute([':username' => $username, ':password' => $hashedPassword, ':firstname' => $name, ':lastname' => $lastname, ':address' => $address, ':role' => 'Client']);
+                $_SESSION['username'] = $username;
+                $_SESSION['role'] = 'Client';
+                $_SESSION['ingelogged'] = true;
+            } else {
+                echo '<div id="wwfout">gebruikersnaam is al in gebruik</div>';
+            }
+        }
+    }
+    if (isset($_SESSION['ingelogged'])) {
+        if ($_SESSION['ingelogged'] == true) {
+            header('location: index.php');
         }
     }
 }
 
-var_dump($_SESSION);
 ?>
 
+<body>
 
-    <table id='login'>
-        <form action="" method="post">
-            <tr><td>Log In</td></tr>
-            <tr><td>Gebruikersnaam</td></tr>
-            <tr><td><input type="text" name="username" required></td></tr>
-            <tr><td>Wachtwoord</td></tr>
-            <tr><td><input type="password" name="password" required></td></tr>
-            <tr><td><input type="hidden" name="action" value="login"></td></tr>
-            <tr><td><input type="submit" value="Inloggen"></td></tr>
-        </form>
+    <?php
+    if ($wwfout) {
+        echo '<div id="mistakes">Wachtwoord of Gebruikersnaam klopt niet</div>';
+    }
+    ?>
 
-        <form action="" method="post">
-            <tr><td>Registreer</td></tr>
-            <tr><td>Voornaam</td></tr>
-            <tr><td><input type="text" name="naam" required></td></tr>
-            <tr><td>Achternaam</td></tr>
-            <tr><td><input type="text" name="achternaam" required></td></tr>
-            <tr><td>Adres</td></tr>
-            <tr><td><input type="text" name="adres" required></td></tr>
-            <tr><td>Gebruikersnaam</td></tr>
-            <tr><td><input type="text" name="username" required></td></tr>
-            <tr><td>Wachtwoord</td></tr>
-            <tr><td><input type="password" name="password" required></td></tr>
-            <tr><td><input type="hidden" name="action" value="register"></td></tr>
-            <tr><td><input type="submit" value="Registreren"></td></tr>
-        </form>
-    </table>
+    <form method="POST" id="login">
+        <label for="#">Log In</label>
+        <label for="username">Gebruikersnaam</label>
+        <input type="text" name="username" id="username">
+        <label for="password">Wachtwoord</label>
+        <input type="password" name="password" id="password">
+        <input type="submit" value="Log In">
+    </form>
+
+    <form method="POST" id="register">
+        <label for="#">Registeren</label>
+        <label for="name">Naam</label>
+        <input type="text" name="name" id="name">
+        <label for="lastname">Achternaam</label>
+        <input type="text" name="lastname" id="lastname">
+        <label for="address">adres</label>
+        <input type="text" name="address" id="adress">
+        <label for="usernameRegister">Gebruikersnaam</label>
+        <input type="text" name="usernameRegister" id="usernameRegister">
+        <label for="password1">Wachtwoord</label>
+        <input type="password" name="password1" id="password1">
+        <label for="password2">Wachtwoord Herhalen</label>
+        <input type="password" name="password2" id="password2">
+        <input type="submit" value="Registreren">
+    </form>
+    <?php
+
+    if($mistakesMade)
+    {
+    echo '<p id="mistakes">';
+    foreach ($mistakes as $mistake) {
+        echo $mistake;
+        echo '<br>';
+    }
+    echo '</p>';
+}
+    ?>
 
 </body>
 

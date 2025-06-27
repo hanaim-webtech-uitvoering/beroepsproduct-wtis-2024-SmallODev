@@ -1,11 +1,12 @@
-<?    if(isset($_POST['bestel'])){
+<?php    if(isset($_POST['bestel'])){
         $order_id = (int)$_POST['bestel'];
         $query->execute([':order_id' => $order_id]);
         $data = $query -> fetch();
    
-    }php 
+    } 
 
-require_once( 'db_connectie.php');
+require_once 'db_connectie.php';
+require_once 'header.php';
 ?>
 
 <!DOCTYPE html>
