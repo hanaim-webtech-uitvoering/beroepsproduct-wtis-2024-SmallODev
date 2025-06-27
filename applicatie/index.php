@@ -63,9 +63,6 @@ $menuknop =0;
 
         print $menukaart;
 
-        var_dump($_GET);
-        var_dump($menukaart);
-
 
         ?>
 

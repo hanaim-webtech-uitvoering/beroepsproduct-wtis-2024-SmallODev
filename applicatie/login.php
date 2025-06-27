@@ -39,7 +39,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $loginQuery->fetch();
 
         echo '<br>';
-        var_dump($user);
         echo '<br>';
         if ($user == false) {
             echo '<div id="mistakes">Wachtwoord of Gebruikersnaam klopt niet</div>';

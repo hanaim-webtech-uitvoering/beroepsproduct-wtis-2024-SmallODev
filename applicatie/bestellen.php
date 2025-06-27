@@ -20,7 +20,6 @@ $orderSucces = false;
 
 
 <?php
-var_dump($_POST);
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = htmlspecialchars($_POST['bestelName']);
     $address = htmlspecialchars($_POST['bestelAddress']);
